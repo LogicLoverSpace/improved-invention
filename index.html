@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growing Snake Plant</title>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        .plant-leaf {
+            transition: all 0.8s ease-in-out;
+        }
+        
+        .water-animation {
+            animation: waterDrop 0.6s ease-out;
+        }
+        
+        @keyframes waterDrop {
+            0% { transform: translateY(-20px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(0); opacity: 0; }
+        }
+        
+        .growth-animation {
+            animation: plantGrow 1s ease-out;
+        }
+        
+        @keyframes plantGrow {
+            0% { transform: scaleY(0.8); }
+            50% { transform: scaleY(1.1); }
+            100% { transform: scaleY(1); }
+        }
+        
+        .water-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .water-button:active {
+            transform: scale(0.95);
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="min-h-full bg-gradient-to-b from-sky-100 to-green-50 flex items-center justify-center p-4">
+  <main class="text-center">
+   <h1 id="plant-title" class="text-3xl font-bold text-green-800 mb-2">My Snake Plant</h1>
+   <p class="text-gray-600 mb-6">Water your plant and watch it grow!</p>
+   <div class="relative inline-block"><!-- Plant Container -->
+    <div class="relative"><!-- Snake Plant Leaves -->
+     <div id="plant-container" class="relative mb-4">
+      <svg id="snake-plant" width="200" height="300" viewbox="0 0 200 300" class="plant-leaf"><!-- Leaf 1 --> <path d="M80 280 Q85 200 90 120 Q92 80 95 40 Q96 20 100 10" stroke="#2d5016" stroke-width="12" fill="none" stroke-linecap="round" id="leaf1" /> <path d="M82 280 Q87 200 92 120 Q94 80 97 40 Q98 20 102 10" stroke="#4a7c59" stroke-width="8" fill="none" stroke-linecap="round" /> <!-- Leaf 2 --> <path d="M100 285 Q95 210 100 130 Q102 90 105 50 Q106 30 110 15" stroke="#2d5016" stroke-width="14" fill="none" stroke-linecap="round" id="leaf2" /> <path d="M102 285 Q97 210 102 130 Q104 90 107 50 Q108 30 112 15" stroke="#4a7c59" stroke-width="10" fill="none" stroke-linecap="round" /> <!-- Leaf 3 --> <path d="M120 280 Q115 205 110 125 Q108 85 105 45 Q104 25 100 12" stroke="#2d5016" stroke-width="11" fill="none" stroke-linecap="round" id="leaf3" /> <path d="M118 280 Q113 205 108 125 Q106 85 103 45 Q102 25 98 12" stroke="#4a7c59" stroke-width="7" fill="none" stroke-linecap="round" />
+      </svg>
+     </div><!-- Red Pot -->
+     <div class="relative">
+      <svg width="200" height="100" viewbox="0 0 200 100" class="absolute bottom-0"><!-- Pot Shadow --> <ellipse cx="100" cy="95" rx="85" ry="8" fill="#000000" opacity="0.2" /> <!-- Main Pot --> <path d="M40 20 L160 20 L150 80 L50 80 Z" fill="#dc2626" stroke="#b91c1c" stroke-width="2" /> <!-- Pot Rim --> <ellipse cx="100" cy="20" rx="60" ry="8" fill="#ef4444" stroke="#dc2626" stroke-width="1" /> <!-- Pot Highlight --> <path d="M50 25 L140 25 L135 70 L55 70 Z" fill="url(#potGradient)" opacity="0.3" /> <!-- Soil --> <ellipse cx="100" cy="25" rx="55" ry="6" fill="#8b4513" /> <defs>
+        <lineargradient id="potGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+         <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.8" />
+         <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+        </lineargradient>
+       </defs>
+      </svg><!-- Pot Label -->
+      <div id="pot-label" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded text-xs font-medium text-gray-700 shadow-sm">
+       Snake Plant
+      </div>
+     </div>
+    </div><!-- Water Drops Animation Container -->
+    <div id="water-drops" class="absolute top-0 left-1/2 transform -translate-x-1/2 pointer-events-none"></div>
+   </div><!-- Plant Stats -->
+   <div class="bg-white rounded-lg shadow-md p-4 mb-6 inline-block min-w-64">
+    <div class="grid grid-cols-2 gap-4 text-sm">
+     <div><span class="text-gray-500">Height:</span> <span id="height-display" class="font-semibold text-green-600 ml-1">Small</span>
+     </div>
+     <div><span class="text-gray-500">Times Watered:</span> <span id="water-count" class="font-semibold text-blue-600 ml-1">0</span>
+     </div>
+    </div>
+    <div class="mt-2 text-xs text-gray-400"><span>Last watered: </span> <span id="last-watered">Never</span>
+    </div>
+   </div><!-- Water Button --> <button id="water-btn" class="water-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-200 flex items-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"> <span class="text-xl">💧</span> <span id="button-text">Water Plant</span> </button> <!-- Loading indicator -->
+   <div id="loading" class="hidden mt-4">
+    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+    <p class="text-sm text-gray-500 mt-2">Growing...</p>
+   </div>
+  </main>
+  <script>
+        // Configuration and state
+        const defaultConfig = {
+            plant_name: "My Snake Plant",
+            pot_label: "Snake Plant",
+            primary_color: "#dc2626",
+            accent_color: "#3b82f6",
+            font_family: "system-ui"
+        };
+
+        let currentData = [];
+        let isLoading = false;
+
+        // Data handler for SDK
+        const dataHandler = {
+            onDataChanged(data) {
+                currentData = data;
+                updatePlantDisplay();
+            }
+        };
+
+        // Get current plant data or create default
+        function getCurrentPlant() {
+            return currentData.length > 0 ? currentData[0] : {
+                plant_height: 1,
+                water_count: 0,
+                last_watered: ""
+            };
+        }
+
+        // Update plant visual display
+        function updatePlantDisplay() {
+            const plant = getCurrentPlant();
+            const heightLevel = Math.min(plant.plant_height, 10);
+            
+            // Update plant size based on height
+            const baseHeight = 300;
+            const newHeight = baseHeight + (heightLevel - 1) * 30;
+            const plantSvg = document.getElementById('snake-plant');
+            plantSvg.style.height = `${newHeight}px`;
+            plantSvg.setAttribute('height', newHeight);
+            plantSvg.setAttribute('viewBox', `0 0 200 ${newHeight}`);
+            
+            // Update leaf paths for growth
+            const growthFactor = 1 + (heightLevel - 1) * 0.3;
+            updateLeafPath('leaf1', growthFactor, newHeight);
+            updateLeafPath('leaf2', growthFactor, newHeight);
+            updateLeafPath('leaf3', growthFactor, newHeight);
+            
+            // Update stats display
+            const heightNames = ['Seedling', 'Small', 'Growing', 'Medium', 'Tall', 'Large', 'Very Large', 'Huge', 'Giant', 'Magnificent'];
+            document.getElementById('height-display').textContent = heightNames[heightLevel - 1] || 'Legendary';
+            document.getElementById('water-count').textContent = plant.water_count;
+            
+            if (plant.last_watered) {
+                const lastWatered = new Date(plant.last_watered);
+                document.getElementById('last-watered').textContent = lastWatered.toLocaleDateString();
+            } else {
+                document.getElementById('last-watered').textContent = 'Never';
+            }
+        }
+
+        // Update individual leaf path for growth
+        function updateLeafPath(leafId, growthFactor, containerHeight) {
+            const leaf = document.getElementById(leafId);
+            if (!leaf) return;
+            
+            const originalPaths = {
+                leaf1: "M80 280 Q85 200 90 120 Q92 80 95 40 Q96 20 100 10",
+                leaf2: "M100 285 Q95 210 100 130 Q102 90 105 50 Q106 30 110 15",
+                leaf3: "M120 280 Q115 205 110 125 Q108 85 105 45 Q104 25 100 12"
+            };
+            
+            const basePath = originalPaths[leafId];
+            const scaledPath = basePath.replace(/(\d+)/g, (match, number) => {
+                const num = parseInt(number);
+                if (num > 200) return Math.floor(num * growthFactor); // Y coordinates
+                return num; // X coordinates stay the same
+            });
+            
+            leaf.setAttribute('d', scaledPath);
+        }
+
+        // Create water drop animation
+        function createWaterDrops() {
+            const container = document.getElementById('water-drops');
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const drop = document.createElement('div');
+                    drop.className = 'water-animation absolute text-2xl';
+                    drop.textContent = '💧';
+                    drop.style.left = `${Math.random() * 40 - 20}px`;
+                    drop.style.top = '50px';
+                    container.appendChild(drop);
+                    
+                    setTimeout(() => {
+                        if (container.contains(drop)) {
+                            container.removeChild(drop);
+                        }
+                    }, 600);
+                }, i * 200);
+            }
+        }
+
+        // Water the plant
+        async function waterPlant() {
+            if (isLoading) return;
+            
+            isLoading = true;
+            const button = document.getElementById('water-btn');
+            const buttonText = document.getElementById('button-text');
+            const loading = document.getElementById('loading');
+            
+            button.disabled = true;
+            buttonText.textContent = 'Watering...';
+            loading.classList.remove('hidden');
+            
+            // Create water animation
+            createWaterDrops();
+            
+            const currentPlant = getCurrentPlant();
+            const newPlantData = {
+                plant_height: currentPlant.plant_height + 1,
+                water_count: currentPlant.water_count + 1,
+                last_watered: new Date().toISOString()
+            };
+            
+            let result;
+            if (currentData.length === 0) {
+                result = await window.dataSdk.create(newPlantData);
+            } else {
+                const updatedPlant = { ...currentData[0], ...newPlantData };
+                result = await window.dataSdk.update(updatedPlant);
+            }
+            
+            if (result.isOk) {
+                // Add growth animation
+                const plantContainer = document.getElementById('plant-container');
+                plantContainer.classList.add('growth-animation');
+                setTimeout(() => {
+                    plantContainer.classList.remove('growth-animation');
+                }, 1000);
+            } else {
+                alert('Failed to water plant. Please try again.');
+            }
+            
+            isLoading = false;
+            button.disabled = false;
+            buttonText.textContent = 'Water Plant';
+            loading.classList.add('hidden');
+        }
+
+        // Element SDK render function
+        async function render(config) {
+            const titleElement = document.getElementById('plant-title');
+            const potLabelElement = document.getElementById('pot-label');
+            
+            if (titleElement) {
+                titleElement.textContent = config.plant_name || defaultConfig.plant_name;
+                titleElement.style.fontFamily = `${config.font_family || defaultConfig.font_family}, system-ui, sans-serif`;
+            }
+            
+            if (potLabelElement) {
+                potLabelElement.textContent = config.pot_label || defaultConfig.pot_label;
+            }
+            
+            // Apply colors
+            const potElements = document.querySelectorAll('[fill="#dc2626"]');
+            potElements.forEach(el => {
+                el.setAttribute('fill', config.primary_color || defaultConfig.primary_color);
+            });
+            
+            const buttonElement = document.getElementById('water-btn');
+            if (buttonElement) {
+                buttonElement.style.backgroundColor = config.accent_color || defaultConfig.accent_color;
+            }
+        }
+
+        // Initialize everything
+        async function init() {
+            // Initialize Data SDK
+            const initResult = await window.dataSdk.init(dataHandler);
+            if (!initResult.isOk) {
+                console.error('Failed to initialize data SDK');
+                return;
+            }
+
+            // Initialize Element SDK
+            if (window.elementSdk) {
+                window.elementSdk.init({
+                    defaultConfig,
+                    render,
+                    mapToCapabilities: (config) => ({
+                        recolorables: [
+                            {
+                                get: () => config.primary_color || defaultConfig.primary_color,
+                                set: (value) => {
+                                    config.primary_color = value;
+                                    window.elementSdk.setConfig({ primary_color: value });
+                                }
+                            },
+                            {
+                                get: () => config.accent_color || defaultConfig.accent_color,
+                                set: (value) => {
+                                    config.accent_color = value;
+                                    window.elementSdk.setConfig({ accent_color: value });
+                                }
+                            }
+                        ],
+                        borderables: [],
+                        fontEditable: {
+                            get: () => config.font_family || defaultConfig.font_family,
+                            set: (value) => {
+                                config.font_family = value;
+                                window.elementSdk.setConfig({ font_family: value });
+                            }
+                        },
+                        fontSizeable: undefined
+                    }),
+                    mapToEditPanelValues: (config) => new Map([
+                        ['plant_name', config.plant_name || defaultConfig.plant_name],
+                        ['pot_label', config.pot_label || defaultConfig.pot_label]
+                    ])
+                });
+            }
+
+            // Set up event listeners
+            document.getElementById('water-btn').addEventListener('click', waterPlant);
+        }
+
+        // Start the app
+        init();
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9906b65f87f5ce4d',t:'MTc2MDc3NjYzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
